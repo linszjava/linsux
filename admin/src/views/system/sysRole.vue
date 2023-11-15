@@ -20,21 +20,33 @@
 
         <!-- 添加按钮 -->
         <div class="tools-div">
-            <el-button type="success" size="small">添 加</el-button>
+            <el-button type="success" size="small" @click="addShow">添 加</el-button>
         </div>
+
+        <!-- 页面表单 -->
+        <el-dialog v-model="dialogVisible" title="添加或修改角色" width="30%">
+            <el-form label-width="120px">
+                <el-form-item label="角色名称">
+                    <el-input v-model="sysRole.roleName"/>
+                </el-form-item>
+                <el-form-item label="角色Code">
+                    <el-input  v-model="sysRole.roleCode"/>
+                </el-form-item>
+                <el-form-item>
+                    <el-button type="primary" @click="submit">提交</el-button>
+                    <el-button @click="dialogVisible = false">取消</el-button>
+                </el-form-item>
+            </el-form>
+        </el-dialog>
         
         <!--- 角色表格数据 -->
         <el-table :data="list" style="width: 100%">
             <el-table-column prop="roleName" label="角色名称" width="180" />
             <el-table-column prop="roleCode" label="角色code" width="180" />
             <el-table-column prop="createTime" label="创建时间" />
-            <el-table-column label="操作" align="center" width="280">
-            <el-button type="primary" size="small">
-                修改
-            </el-button>
-            <el-button type="danger" size="small">
-                删除
-            </el-button>
+            <el-table-column label="操作" align="center" width="280" #default="scope">
+            <el-button type="primary" size="small" @click="editShow(scope.row)">修改</el-button>
+            <el-button type="danger" size="small" @click="deleteById(scope.row)">删除</el-button>
             </el-table-column>
         </el-table>
 
@@ -54,7 +66,16 @@
 
 <script setup>
 import { ref , onMounted } from 'vue';
-import { GetSysRoleListByPage } from '@/api/sysRole';
+import { GetSysRoleListByPage , SaveSysRole ,UpdateSysRole,DeleteSysRoleById} from '@/api/sysRole';
+import { ElMessage,ElMessageBox } from 'element-plus'
+
+// 控制对话是否展示的变量
+const dialogVisible = ref(false)
+
+//进入添加
+const addShow = () => {
+  	dialogVisible.value = true
+}
 
 // 分页条总记录数
 let total = ref(0)
@@ -88,6 +109,55 @@ const fetchData = async () => {
     const {data , code , message } = await GetSysRoleListByPage(pageParams.value.page , pageParams.value.limit , queryDto.value) ;
     list.value = data.list;
     total.value = data.total
+}
+
+//表单数据模型
+const defaultForm = {
+    id: "",
+    roleCode: "",
+    roleName: ""
+}
+const sysRole = ref(defaultForm)   // 使用ref包裹该对象，使用reactive不方便进行重置
+ 
+// 添加角色
+const submit = async () => {
+    if(!sysRole.value.id) {
+        const { code } = await SaveSysRole(sysRole.value) ;
+        if(code === 200) {
+            dialogVisible.value = false
+            ElMessage.success('操作成功')
+            fetchData()
+        }
+    }else {
+        const { code } = await UpdateSysRole(sysRole.value) ;
+        if(code === 200) {
+            dialogVisible.value = false
+            ElMessage.success('操作成功')
+            fetchData()
+        }
+    }
+}
+
+// 修改按钮点击事件处理函数
+const editShow = (row) => {
+    sysRole.value = row
+    dialogVisible.value = true
+}
+
+// 删除数据
+const deleteById = (row) => {
+    ElMessageBox.confirm('此操作将永久删除该记录, 是否继续?', 'Warning', {
+        confirmButtonText: '确定',
+        cancelButtonText: '取消',
+        type: 'warning',
+    }).then(async () => {
+       const {code } = await DeleteSysRoleById(row.id)
+       if(code === 200) {
+            ElMessage.success('删除成功')
+            pageParams.value.page = 1
+            fetchData()
+       }
+    })
 }
 </script>
 

@@ -13,3 +13,29 @@ export const GetSysRoleListByPage = (current,limit,queryDto) => {
     data: queryDto, //其他参数
   })
 }
+
+// 添加角色请求方法
+export const SaveSysRole = (data) => {
+    return request({
+        url: '/admin/system/sysRole/saveSysRole',
+        method: 'post',
+        data
+    })
+}
+
+// 保存修改
+export const UpdateSysRole = (data) => {
+    return request({
+        url: '/admin/system/sysRole/updateSysRole',
+        method: 'put',
+        data
+    })
+}
+
+// 删除角色
+export const DeleteSysRoleById = (roleId) => {
+    return request({
+        url: '/admin/system/sysRole/deleteSysRole/' + roleId,
+        method: 'delete'
+    })
+}
